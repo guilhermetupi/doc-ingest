@@ -11,7 +11,7 @@ Microsserviço de ingestão de documentos — upload, parsing e armazenamento de
 | Database | SQLite via aiosqlite |
 | Migrations | Alembic |
 | Config | pydantic-settings |
-| PDF parsing | PyPDF2 |
+| PDF parsing | pypdf |
 | Logging | structlog |
 
 ## Estrutura do projeto
@@ -103,3 +103,46 @@ alembic upgrade head
 # Executar
 uv run doc-ingest
 ```
+
+## Testes
+
+### Estrutura
+
+```
+tests/
+├── conftest.py                              # Fixtures compartilhadas (engine in-memory, criação/limpeza de tabelas)
+├── unit/
+│   ├── config/
+│   │   └── test_env.py                      # Settings (pydantic-settings)
+│   ├── entities/
+│   │   └── test_document.py                 # Document entity (create, reconstitute, serialização)
+│   ├── repositories/
+│   │   ├── test_document_mapper.py          # DocumentMapper (to_model, to_entity)
+│   │   └── test_document_repository.py      # DocumentRepository com banco in-memory
+│   └── services/
+│       ├── test_document_service.py          # DocumentService (com mocks de repo e parser)
+│       └── test_file_text_parser.py          # FileTextParser (Markdown real, PDF mockado)
+└── integration/
+    └── test_document_routes.py               # Endpoints REST (httpx ASGITransport + dependency overrides)
+```
+
+### Executar
+
+```bash
+# Sincronizar dependências (inclui dev)
+uv sync --group dev
+
+# Rodar todos os testes
+uv run pytest -v
+
+# Por camada
+uv run pytest tests/unit/ -v
+uv run pytest tests/integration/ -v
+```
+
+| Camada | Estratégia |
+|---|---|
+| Entity / Mapper / Config | Testes puros, sem dependências externas |
+| Service | Mocks via `unittest.mock` (AsyncMock para métodos async) |
+| Repository | Banco SQLite in-memory com `StaticPool` (engine real, dados isolados por teste) |
+| Routes | `httpx.ASGITransport` + `app.dependency_overrides` (sem servidor real) |

@@ -1,6 +1,6 @@
 import io
 
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from fastapi import UploadFile
 
 from doc_ingest.services.interface.file_text_parser import IFileTextParser

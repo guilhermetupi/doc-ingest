@@ -12,3 +12,4 @@ wheels/
 .env
 .idea/
 db.sqlite
+.DS_Store

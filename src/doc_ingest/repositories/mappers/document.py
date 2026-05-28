@@ -8,4 +8,5 @@ class DocumentMapper:
 
     @staticmethod
     def to_entity(model: DocumentModel) -> Document:
-        return Document.reconstitute(**model.__dict__)
+        fields = {c.name: getattr(model, c.name) for c in model.__table__.columns}
+        return Document.reconstitute(**fields)
